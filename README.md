@@ -7,7 +7,7 @@ A text-based survival casino game built in Python using OOP, NumPy, Pandas, and 
 This project is a Python-based interactive game that combines two experiences:
 
 🚀 Features - 
-🎰 **Casino mini-games** (slots, dice, etc.) 
+🎰 **Casino mini-games** (slots, dice,number guess,coin flip,coin draw etc.) 
 - 🍽️ **Restaurant menu system** using Pandas DataFrames
 - 🧩 **Modular OOP design** with inheritance and abstraction
 -  🔢 **NumPy integration** for efficient array/matrix operations
@@ -67,11 +67,4 @@ requirements.txt for dependency management.
 
 Unit tests for reliability.
 
-🔹 Why This Project Matters
-Shows ability to design modular systems using OOP.
 
-Demonstrates data handling skills with Pandas and NumPy.
-
-Reflects problem-solving and debugging persistence.
-
-Can be extended into a larger portfolio project (adding more games, restaurant features, or even a GUI).
