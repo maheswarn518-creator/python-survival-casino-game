@@ -1,0 +1,423 @@
+
+#code for project
+import random
+import numpy as np
+import pandas as pd
+import time
+
+def typewriter(text, delay=0.01):
+    for char in text:
+        print(char, end="", flush=True)
+        time.sleep(delay)
+    print()
+
+# -------------------------------
+# Casino Class
+# -------------------------------
+class Casino:
+    def __init__(self, balance = 1000, game=None):
+        self.balance = balance
+        self.history = pd.DataFrame(columns=["Game", "Bet", "Details", "Result", "Balance"])
+        self.game = game
+
+
+    def dice_roll(self, bet):
+        typewriter("🎲 Game rules: Roll 3 dice. Win if all are EVEN, all are ODD, or all the SAME.", 0.02)
+        your_choice = input("Do you want to roll? (yes/no): ")
+        if your_choice != "yes":
+            print("You skipped the dice roll.")
+            return self.balance
+        print("Game starts...")
+        time.sleep(2)
+        typewriter(f"Your current balance is {self.balance}", delay=0.02)
+        while True:
+            if bet > self.balance:
+                print("❌ Insufficient funds.")
+                return self.balance
+            elif bet <= 0:
+                print("❌ Invalid bet amount.")
+                return self.balance
+
+            rolls = np.random.randint(1, 7, size=3)  # 3 dice
+            print(f"You rolled: {rolls}")
+            if np.all(rolls % 2 == 0):
+                self.balance += bet * 3
+                print("🎉 All even! You win!")
+            elif np.all(rolls % 2 == 1):
+                self.balance += bet * 4
+                print("🎉 All odd! You win!")
+            elif len(set(rolls)) == 1:
+                self.balance += bet * 5
+                print("🎉 All same! You win!")
+            else:
+                print("😢 Not all even, odd, or same")
+                self.balance -= bet
+                print("😢 You lose!")
+                again = input(" play again (yes/no)")
+                if again == "yes":
+                    self.dice_roll(bet)
+                elif again == "no":
+                    self.number_guessing(bet)
+
+            print(f"Your new balance is: {self.balance}")
+            self.history.loc[len(self.history)] = ["Dice Roll", bet, rolls.tolist(),"played", self.balance]
+            return self.balance
+
+    def number_guessing(self, bet):
+        typewriter("welcome to number guessing game!",delay=0.02)
+        print("Play number guessing")
+        print(f"current balance {self.balance}")
+
+        print("Game starts")
+        questions = {
+            "5 + 2/3 - 15*2": -24.33,
+            "12*3 - 8/2 + 5": 37,
+            "20/4 + 7*2 - 9": 10,
+            "50 - 18/3 + 6*2": 56,
+            "9*9 - 25/5 + 4": 80
+        }
+        score = 0
+        print("Solve 5 math questions. You must answer at least 4 correctly to win!")
+
+        for q,ans in questions.items():
+            try:
+                user_answer = float(input(f"Solve: {q} = "))
+            except ValueError:
+                print("❌ Invalid input, counted as wrong.")
+                user_answer = None
+            if user_answer is not None and np.isclose(user_answer, ans, atol=0.01):
+                print("✅ Correct!")
+                score += 1
+                result = "Correct"
+            else:
+                print(f"❌ Wrong! Correct answer is {ans}")
+                result = "Wrong"
+
+            self.history.loc[len(self.history)] = ["Number Guessing", bet, q, result, self.balance]
+        print(f"\nYou got {score} out of 5 correct.")
+        if score >= 4:
+            print("🎉 Congratulations! You survived the puzzle challenge!")
+            self.balance += bet * 5
+            result = "Win"
+            again = input(" play again (yes/no)")
+            if again == "yes":
+                self.number_guessing(bet)
+            elif again == "no":
+                if self.game:
+                    self.game.go_to_restaurant()
+
+        else:
+            print("😢 You failed the puzzle challenge.")
+            self.balance -= bet
+            result = "Lose"
+        print(f"Your current balance: {self.balance}")
+        self.history.loc[len(self.history)] = ["Number Guessing", bet, "Final Score", result, self.balance]
+        return self.balance
+
+    def show_history(self):
+        print("--- Game History ---")
+        print(self.history)
+
+    def play_slots(self, bet):
+        typewriter("welcome to slot game!",delay=0.02)
+        while True:
+            symbols = np.array(['🍉','🍒','🍌','⭐','🔥'])
+            row = np.random.choice(symbols, 3)
+            print(" | ".join(row))
+            if np.all(row == row[0]):
+                payout = bet * {'🍒':3,'🍉':4,'🍌':5,'⭐':6,'🔥':10}[row[0]]
+                print(f"🎉 Jackpot! You won {payout}")
+                self.balance += payout
+            else:
+                print("😢 You lost!")
+                self.balance -= bet
+                result = "Lose"
+
+            print(f"Updated balance: {self.balance}")
+            choice = input(" continue or exit: ")
+            if choice == "continue":
+                continue
+            elif choice == "exit":
+                next_game = input(" coin_flip/card_draw: ")
+                if next_game == "coin_flip":
+                    self.coin_flip(bet)
+                elif next_game == "card_draw":
+                    self.card_draw(bet)
+                    break
+
+            return self.balance
+
+    def coin_flip(self,bet):
+        typewriter("welcome to coin flip game!",delay=0.02)
+        print(f"Current balance: {self.balance}")
+
+        try:
+            bet=int(bet)
+        except ValueError:
+            print("❌ Invalid input. Please enter a number.")
+            return
+
+        if bet > self.balance:
+            print("❌ Insufficient funds.")
+            return
+        elif bet <= 0:
+            print("❌ Invalid bet amount.")
+            return
+        while True:
+            guess = input("Heads or Tails? ")
+            flip = random.choice(["Heads", "Tails"])
+            print(f"Coin landed on: {flip}")
+
+            if guess == flip:
+                self.balance += bet
+                print("🎉 Correct! You win!")
+            else:
+                self.balance -= bet
+                print("😢 Wrong guess. You lose.")
+
+            print(f"Updated balance: {self.balance}")
+
+            again = input("Continue or Exit? ").lower()
+            if again == "continue":
+                continue
+            elif again == "exit":
+                next_game = input("card_draw/play_slots: ").lower()
+                if next_game == "card_draw":
+                    self.card_draw(bet)
+                elif next_game == "play_slots":
+                    self.play_slots(bet)
+
+
+    def card_draw(self, bet):
+        typewriter("welcome to card draw game!",delay=0.02)
+        while True:
+            print(f"Current balance: {self.balance}")
+            if bet > self.balance:
+                print("❌ Insufficient funds.")
+                return self.balance
+            elif bet <= 0:
+                print("❌ Invalid bet amount.")
+                return self.balance
+            card = np.random.randint(1, 10)
+            try:
+                guess = int(input("Enter your guess (1-9): "))
+            except ValueError:
+                print("❌ Invalid input.")
+                return self.balance
+            if guess == card:
+                 print(f"🎉 Spot on! It was {card}. You win!")
+                 self.balance += bet * 4
+                 result = "Win"
+            else:
+                print(f"😢 Not quite, it was {card}. You lose.")
+                self.balance -= bet
+                result = "Lose"
+            print(f"Your new balance is: {self.balance}")
+
+            again = input("Continue or Exit? ")
+            if again == "continue":
+                continue
+            elif again == "exit":
+                next_game = input("coin_flip/play_slots/restaurant: ")
+                if next_game== "card_draw":
+                    self.card_draw(bet)
+
+                elif next_game == "play_slots":
+                    self.play_slots(bet)
+                elif next_game == "restaurant":
+                    if self.game:
+                        self.game.go_to_restaurant()
+
+                    print("\n--- Restaurant Menu ---")
+            self.history.loc[len(self.history)] = ["Card Draw", bet, card, guess, result, self.balance]
+            return self.balance
+
+    def show_history(self):
+        print("--- Game History ---")
+        print(self.history)
+
+# -------------------------------
+# Restaurant Class (Pandas)
+# -------------------------------
+class restaurant:
+    def __init__(self, balance):
+        self.balance = balance
+        self.menu = pd.DataFrame({
+            "Item": ["pizza","noodles","bajji","meals","sweet","burger","chicken","chapathi"],
+            "Price": [30,40,20,50,10,60,70,80]
+        })
+
+    def show_menu(self):
+        print("\n--- Villa Restaurant Menu ---")
+        print(self.menu)
+
+    def order_food(self, item):
+        if item in self.menu["Item"].values:
+            price = self.menu.loc[self.menu["Item"] == item, "Price"].values[0]
+            if self.balance >= price:
+                self.balance -= price
+                print(f"You ordered {item}. Cost: {price}. Remaining balance: {self.balance}")
+            else:
+                print("Not enough balance!")
+        else:
+            print("Item not found in menu.")
+        return self.balance
+
+# -------------------------------
+# Game Class
+# -------------------------------
+class Game:
+    def __init__(self):
+        self.balance = 1000
+        self.casino = Casino(self.balance,self)
+        self.restaurant = restaurant(self.balance)
+
+    def start(self):
+        typewriter("🎮 Welcome to Tacoon City!", 0.02)
+        print(f"Starting balance: {self.balance}")
+        for i in range(3, 0, -1):
+            print(i)
+            time.sleep(1)
+
+        # Print wake up once after countdown
+        print(" ⏰ ALARAM RING , WAKE UP !")
+        print(f"current balance is :{self.balance}")
+        time.sleep(1)
+        game = True
+        while game:
+            game = input(" do you want to survive (ok/exit):")
+            time.sleep(1)
+            if game == "ok":
+                print(" solve this puzzle then door open")
+                typewriter("Time creates numbers, light creates value, and order creates truth. Numbers can multiply value.Inside the room, there are three clocks. All are stopped. One clock is stopped at 5:00 PM — it is an old clock with dead batteries. The remaining clocks are new.Clock A shows 3:00, Clock B shows 4:00, and Clock C shows 5:00. Three candles are placed under each clock: the first candle can burn for 3 hours, the second for 4 hours, and the third for 1 hour.",delay=0.02)
+                answer = int(input("guess the 4 digit number to unlock door:"))
+                time.sleep(2)
+                try:
+                    guess = answer
+                    if guess == 9855:
+                        typewriter("door open ,you are very brave to survive this tacoon city ,once again welcome to taccon city ",delay=0.02)
+                        time.sleep(2)
+                        typewriter(" unlocked level 2", delay=0.02)
+                        time.sleep(1)
+                        typewriter("now enter casino to play games,win and survive in tacoon city", delay=0.02)
+                        break
+                    else:
+                        print("wrong answer TRY AGAIN.")
+                except:
+                    print("enter valid number.")
+
+            elif game == "exit":
+                print("Game Over. Thanks for playing!")
+                exit()
+            else:
+                print("Invalid choice. Type 'ok' or 'exit'.")
+
+            typewriter("welcome to the casino , please  take a entry ticket",delay=0.02)
+            time.sleep(1)
+            print("based on your ticket you should allow to play games")
+            typewriter(" 1.platinum ticket cost : 50,"
+                  " 2.silver ticket cost : 100,"
+                  " 3.gold ticket cost : 200 ",delay=0.02)
+        self.balance = 1000
+        ticket = input("Choose your ticket (platinum/silver/gold): ").strip().lower()
+        if ticket == "silver":
+            print("Silver ticket: fewer games, straight entry.")
+            self.balance -= 100
+            print(f"You ordered {ticket}. Cost: {self.balance}")
+            self.play_silver_games()
+            self.balance = self.casino.balance
+
+        elif ticket == "platinum":
+            print("Platinum ticket: fewer games, straight entry.")
+            self.balance -= 50
+            print(f"You ordered {ticket}. Cost: {self.balance}")
+            self.play_silver_games()
+            self.balance = self.casino.balance
+
+        elif ticket == "gold":
+            print("Gold ticket: fewer games, straight entry.")
+            self.balance -= 100
+            print(f"You ordered {ticket}. Cost: {self.balance}")
+        else:
+            print("Invalid ticket choice.")
+
+
+
+    def play_silver_games(self):
+        while True:
+            choice = input("slots / card_draw / coin_flip / leave casino: ")
+            if choice == "slots":
+                bet = int(input("Enter your bet: "))
+                self.casino.play_slots(bet)
+                self.balance = self.casino.balance
+
+            elif choice == "card_draw":
+                bet = int(input("Enter your bet: "))
+                self.casino.card_draw(bet)
+                self.balance = self.casino.balance
+
+            elif choice == "coin_flip":
+                bet = int(input("Enter your bet: "))
+                guess = input("Heads or Tails? ")
+                self.casino.coin_flip(bet)
+                self.balance = self.casino.balance
+
+            elif choice == "leave casino":
+                break
+            else:
+                print("Invalid choice.")
+            again = input("Play again? (yes/no): ")
+            if again != "yes":
+                break
+
+    def play_platinum_games(self):
+            choice = input("Play dice roll / number guessing / leave casino: ").strip().lower()
+            if choice == "dice roll":
+                bet = int(input("Enter your bet: "))
+                self.casino.dice_roll(bet)
+                self.balance = self.casino.balance
+
+            elif choice == "number guessing":
+                bet = int(input("Enter your bet: "))
+                self.casino.number_guessing(bet)
+                self.balance = self.casino.balance
+
+            elif choice == "leave casino":
+                self.play_platinum_games()
+                self.balance = self.casino.balance
+
+
+            else:
+                print("Invalid choice.")
+                again = input("Play again? (yes/no): ")
+                if again == "yes":
+                    self.play_platinum_games()
+                    self.balance = self.casino.balance
+
+                elif again == "no":
+                     print("Thanks for playing!")
+
+
+
+
+    def go_to_restaurant(self):
+        self.restaurant.balance = self.casino.balance
+        typewriter("You leave the casino and head to the villa restaurant...",delay=0.02)
+        self.restaurant.show_menu()
+        while True:
+            order = input("Enter your food choice (or 'exit' to leave): ")
+            if order == "exit":
+                print("You left the restaurant "  )
+                break
+            self.balance = self.restaurant.order_food(order)
+            self.casino.balance = self.balance
+
+
+# -------------------------------
+# Run Game
+# -------------------------------
+if __name__ == "__main__":
+    game = Game()
+    game.start()
+    game.go_to_restaurant()
+
